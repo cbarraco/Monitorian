@@ -14,7 +14,7 @@ using Monitorian.Core.Helper;
 
 namespace Monitorian.Core.Models.Monitor
 {
-	internal class MonitorManager
+	public class MonitorManager
 	{
 		#region Type
 
