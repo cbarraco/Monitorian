@@ -145,10 +145,12 @@ internal class PowerManagement
 		try
 		{
 			using var key = Registry.LocalMachine.OpenSubKey(name);
+			if (key?.GetValue("Attributes") is not int attributes)
+				return false;
 
 			// 1: Remove
 			// 2: Add
-			return ((int)key.GetValue("Attributes") is 2);
+			return (attributes is 2);
 		}
 		catch (Exception ex)
 		{

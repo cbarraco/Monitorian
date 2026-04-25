@@ -14,8 +14,8 @@ public static class SystemInfo
 {
 	private class SystemInfoBase
 	{
-		public string Manufacturer { get; }
-		public string Model { get; }
+		public string Manufacturer { get; private set; } = string.Empty;
+		public string Model { get; private set; } = string.Empty;
 
 		public SystemInfoBase()
 		{
@@ -23,8 +23,8 @@ public static class SystemInfo
 
 			using var key = Registry.LocalMachine.OpenSubKey(keyName);
 
-			Manufacturer = key?.GetValue("SystemManufacturer") as string;
-			Model = key?.GetValue("SystemProductName") as string;
+			Manufacturer = key?.GetValue("SystemManufacturer") as string ?? string.Empty;
+			Model = key?.GetValue("SystemProductName") as string ?? string.Empty;
 
 			// Fallback
 			if (string.IsNullOrEmpty(Manufacturer) ||
@@ -35,8 +35,8 @@ public static class SystemInfo
 					using var @class = new ManagementClass("Win32_ComputerSystem");
 					using var instance = @class.GetInstances().Cast<ManagementObject>().FirstOrDefault();
 
-					Manufacturer = instance?["Manufacturer"] as string;
-					Model = instance?["Model"] as string;
+					Manufacturer = instance?["Manufacturer"] as string ?? string.Empty;
+					Model = instance?["Model"] as string ?? string.Empty;
 				}
 				catch (ManagementException)
 				{

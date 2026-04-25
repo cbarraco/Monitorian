@@ -52,7 +52,7 @@ internal class DeviceInformation
 		ref SP_DEVINFO_DATA DeviceInfoData,
 		SPDRP Property,
 		out uint PropertyRegDataType,
-		byte[] PropertyBuffer,
+		byte[]? PropertyBuffer,
 		uint PropertyBufferSize,
 		out uint RequiredSize);
 
@@ -61,7 +61,7 @@ internal class DeviceInformation
 	private static extern bool SetupDiGetDeviceInstanceId(
 		IntPtr DeviceInfoSet,
 		ref SP_DEVINFO_DATA DeviceInfoData,
-		[Out] StringBuilder DeviceInstanceId,
+		[Out] StringBuilder? DeviceInstanceId,
 		uint DeviceInstanceIdSize,
 		out uint RequiredSize);
 
@@ -277,7 +277,7 @@ internal class DeviceInformation
 		return BitConverter.ToUInt32(buffer, 0);
 	}
 
-	private static byte[] GetDevicePropertyBytes(IntPtr DeviceInfoSet, SP_DEVINFO_DATA DeviceInfoData, SPDRP property)
+	private static byte[]? GetDevicePropertyBytes(IntPtr DeviceInfoSet, SP_DEVINFO_DATA DeviceInfoData, SPDRP property)
 	{
 		SetupDiGetDeviceRegistryProperty(
 			DeviceInfoSet,

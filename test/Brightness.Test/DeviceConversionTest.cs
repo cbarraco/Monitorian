@@ -1,3 +1,4 @@
+using System.Runtime.Versioning;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using static Brightness.Cli.Monitors.DeviceConversion;
@@ -5,6 +6,7 @@ using static Brightness.Cli.Monitors.DeviceConversion;
 namespace Brightness.Test;
 
 [TestClass]
+[SupportedOSPlatform("windows10.0.22621.0")]
 public class DeviceConversionTest
 {
 	#region ConvertToDeviceInstanceId

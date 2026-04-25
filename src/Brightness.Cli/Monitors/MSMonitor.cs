@@ -26,9 +26,9 @@ internal class MSMonitor
 		[DataMember(Order = 1)]
 		public string Description { get; } = description;
 
-		public byte[] BrightnessLevels { get; }
+		public byte[]? BrightnessLevels { get; }
 		[DataMember(Order = 2, Name = nameof(BrightnessLevels))]
-		private string _brightnessLevelsString;
+		private string? _brightnessLevelsString;
 
 		[OnSerializing]
 		private void OnSerializing(StreamingContext context)
@@ -39,7 +39,7 @@ internal class MSMonitor
 		public DesktopItem(
 			string deviceInstanceId,
 			string description,
-			byte[] brightnessLevels) : this(
+			byte[]? brightnessLevels) : this(
 				deviceInstanceId: deviceInstanceId,
 				description: description)
 		{
@@ -90,7 +90,7 @@ internal class MSMonitor
 
 		using (var @class = new ManagementClass(@"root\wmi", "WmiMonitorBrightness", null))
 		{
-			ManagementObjectCollection instances = null;
+			ManagementObjectCollection? instances = null;
 
 			try
 			{
@@ -130,12 +130,15 @@ internal class MSMonitor
 
 					using var instance = (ManagementObject)enumerator.Current;
 
-					var instanceName = (string)instance.GetPropertyValue("InstanceName");
+					var instanceName = instance.GetPropertyValue("InstanceName") as string;
+					if (string.IsNullOrWhiteSpace(instanceName))
+						continue;
+
 					var monitor = monitors.FirstOrDefault(x => instanceName.StartsWith(x.DeviceInstanceId, StringComparison.OrdinalIgnoreCase));
 					if (monitor is null)
 						continue;
 
-					var level = (byte[])instance.GetPropertyValue("Level");
+					var level = instance.GetPropertyValue("Level") as byte[];
 
 					yield return new DesktopItem(
 						deviceInstanceId: monitor.DeviceInstanceId,
@@ -160,9 +163,15 @@ internal class MSMonitor
 			{
 				using (instance)
 				{
-					var instanceName = (string)instance.GetPropertyValue("InstanceName");
+					var instanceName = instance.GetPropertyValue("InstanceName") as string;
+					if (string.IsNullOrWhiteSpace(instanceName))
+						continue;
+
 					if (instanceName.StartsWith(deviceInstanceId, StringComparison.OrdinalIgnoreCase))
-						return (byte)instance.GetPropertyValue("CurrentBrightness");
+					{
+						if (instance.GetPropertyValue("CurrentBrightness") is byte brightness)
+							return brightness;
+					}
 				}
 			}
 			return -1;
@@ -191,7 +200,10 @@ internal class MSMonitor
 			{
 				using (instance)
 				{
-					var instanceName = (string)instance.GetPropertyValue("InstanceName");
+					var instanceName = instance.GetPropertyValue("InstanceName") as string;
+					if (string.IsNullOrWhiteSpace(instanceName))
+						continue;
+
 					if (instanceName.StartsWith(deviceInstanceId, StringComparison.OrdinalIgnoreCase))
 					{
 						object result = instance.InvokeMethod("WmiSetBrightness", [(uint)timeout, (byte)brightness]);
@@ -199,7 +211,9 @@ internal class MSMonitor
 						var isSuccess = (result is null); // Return value will be null if succeeded.
 						if (!isSuccess)
 						{
-							var errorCode = (uint)result;
+							if (result is not uint errorCode)
+								return false;
+
 							isSuccess = (errorCode is 0);
 							if (!isSuccess)
 							{
@@ -220,7 +234,7 @@ internal class MSMonitor
 		}
 	}
 
-	public static (string productCode, string serialNumber) GetIds(string deviceInstanceId)
+	public static (string? productCode, string? serialNumber) GetIds(string deviceInstanceId)
 	{
 		if (string.IsNullOrWhiteSpace(deviceInstanceId))
 			throw new ArgumentNullException(nameof(deviceInstanceId));
@@ -234,7 +248,10 @@ internal class MSMonitor
 			{
 				using (instance)
 				{
-					var instanceName = (string)instance.GetPropertyValue("InstanceName");
+					var instanceName = instance.GetPropertyValue("InstanceName") as string;
+					if (string.IsNullOrWhiteSpace(instanceName))
+						continue;
+
 					if (instanceName.StartsWith(deviceInstanceId, StringComparison.OrdinalIgnoreCase))
 					{
 						return (productCode: GetValue("ProductCodeID"),
@@ -242,9 +259,9 @@ internal class MSMonitor
 					}
 				}
 
-				string GetValue(string propertyName)
+				string? GetValue(string propertyName)
 				{
-					var propertyValue = (ushort[])instance.GetPropertyValue(propertyName);
+					var propertyValue = instance.GetPropertyValue(propertyName) as ushort[];
 					if (propertyValue is not { Length: > 0 })
 						return null;
 
@@ -269,7 +286,7 @@ internal class MSMonitor
 
 	private static bool? _isBrightnessEventWatchable = null;
 
-	public static (ManagementEventWatcher watcher, string message) StartBrightnessEventWatcher()
+	public static (ManagementEventWatcher? watcher, string? message) StartBrightnessEventWatcher()
 	{
 		try
 		{
@@ -292,10 +309,10 @@ internal class MSMonitor
 		}
 	}
 
-	public static (string instanceName, byte brightness) ParseBrightnessEventArgs(EventArrivedEventArgs e)
+	public static (string? instanceName, byte brightness) ParseBrightnessEventArgs(EventArrivedEventArgs e)
 	{
 		var newEvent = e.NewEvent;
-		return ((string)newEvent["InstanceName"], (byte)newEvent["Brightness"]);
+		return (newEvent["InstanceName"] as string, newEvent["Brightness"] is byte brightness ? brightness : default);
 	}
 
 	#endregion

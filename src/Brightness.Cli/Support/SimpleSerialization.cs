@@ -24,7 +24,7 @@ public class SimpleSerialization
 	/// If an Object of value is a String which represents a serialized object, use StringWrapper
 	/// class to wrap the String so that it will not be handled as a simple String.
 	/// </remarks>
-	public static string Serialize(params (string name, object value)[] members)
+	public static string Serialize(params (string name, object? value)[] members)
 	{
 		var (indent, lineBreak) = GetIndentLineBreak();
 
@@ -35,7 +35,7 @@ public class SimpleSerialization
 
 	private static string Escape(string source) => source.Replace("\r", @"\r").Replace("\n", @"\n");
 
-	private static string Convert(object value)
+	private static string Convert(object? value)
 	{
 		return value switch
 		{
@@ -46,7 +46,7 @@ public class SimpleSerialization
 			DateTime v => $@"""{v:yyyy-MM-ddTHH:mm:ss.fffZ}""",
 			DateTimeOffset v => $@"""{v:yyyy-MM-ddTHH:mm:ss.fffzzz}""",
 			IEnumerable v => ConvertCollection(v),
-			_ => ConvertValue(value.ToString())
+			_ => ConvertValue(value.ToString() ?? string.Empty)
 		};
 	}
 

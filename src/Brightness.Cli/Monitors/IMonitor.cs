@@ -29,8 +29,8 @@ public interface IMonitor : IDisposable
 	AccessResult UpdateContrast();
 	AccessResult SetContrast(int contrast);
 
-	(AccessResult result, ValueData data) GetValue(byte code);
-	(AccessResult result, ValueData data) SetValue(byte code, int value);
+	(AccessResult result, ValueData? data) GetValue(byte code);
+	(AccessResult result, ValueData? data) SetValue(byte code, int value);
 }
 
 public enum ConnectionType
@@ -70,9 +70,9 @@ public enum AccessStatus
 public class AccessResult
 {
 	public AccessStatus Status { get; }
-	public string Message { get; }
+	public string? Message { get; }
 
-	public AccessResult(AccessStatus status, string message) => (this.Status, this.Message) = (status, message);
+	public AccessResult(AccessStatus status, string? message) => (this.Status, this.Message) = (status, message);
 
 	public static readonly AccessResult Succeeded = new(AccessStatus.Succeeded, null);
 	public static readonly AccessResult Failed = new(AccessStatus.Failed, null);
@@ -82,9 +82,9 @@ public class AccessResult
 public class ValueData
 {
 	public byte Value { get; }
-	public ReadOnlyCollection<byte> Values { get; }
+	public ReadOnlyCollection<byte>? Values { get; }
 
-	public ValueData(byte value, IEnumerable<byte> values)
+	public ValueData(byte value, IEnumerable<byte>? values)
 	{
 		this.Value = value;
 

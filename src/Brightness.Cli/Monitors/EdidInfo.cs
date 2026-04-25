@@ -13,8 +13,8 @@ public class EdidInfo
 {
 	public string ManufacturerId { get; }
 	public string ProductCode { get; }
-	public string MonitorName { get; }
-	public string SerialNumber { get; }
+	public string? MonitorName { get; }
+	public string? SerialNumber { get; }
 	public int ManufactureWeek { get; }
 	public int ManufactureYear { get; }
 
@@ -44,7 +44,7 @@ public class EdidInfo
 			return (edid[10] + edid[11] * 256).ToString("X4");
 		}
 
-		static string GetDescriptorData(in byte[] edid, byte descriptorType)
+		static string? GetDescriptorData(in byte[] edid, byte descriptorType)
 		{
 			for (int i = 3; i <= 6; i++)
 			{
@@ -63,7 +63,7 @@ public class EdidInfo
 
 	public string Manufacturer
 	{
-		get => _manufacturerMap.TryGetValue(ManufacturerId, out string name) ? name : ManufacturerId;
+		get => _manufacturerMap.TryGetValue(ManufacturerId, out var name) ? name : ManufacturerId;
 	}
 
 	private static readonly Dictionary<string, string> _manufacturerMap = new()
@@ -112,7 +112,7 @@ public class EdidInfo
 			{ "XMI","Xiaomi"} // Verified
 		};
 
-	public static EdidInfo ReadFromRegistry(string deviceInstanceId)
+	public static EdidInfo? ReadFromRegistry(string deviceInstanceId)
 	{
 		var path = $@"SYSTEM\CurrentControlSet\Enum\{deviceInstanceId}\Device Parameters";
 

@@ -13,7 +13,7 @@ Brightness is a command line tool to control monitor brightness.
 
 ## Usage
 
-```
+```text
 brightness - Control monitor brightness from the command line
 
 Usage:

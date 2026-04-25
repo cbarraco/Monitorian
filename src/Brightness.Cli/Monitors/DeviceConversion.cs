@@ -20,11 +20,11 @@ public static class DeviceConversion
 
 		int index = devicePath.IndexOf("DISPLAY", StringComparison.Ordinal);
 		if (index < 0)
-			return null;
+			return string.Empty;
 
 		var fields = devicePath.Substring(index).Split('#');
 		if (fields.Length < 3)
-			return null;
+			return string.Empty;
 
 		return string.Join(@"\", fields.Take(3));
 	}
@@ -55,7 +55,7 @@ public static class DeviceConversion
 				}
 			}
 		}
-		deviceInstanceId = null;
+		deviceInstanceId = string.Empty;
 		return false;
 	}
 }

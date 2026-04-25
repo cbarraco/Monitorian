@@ -26,10 +26,10 @@ internal static class DisplayInformationProvider
 	public interface IDisplayInformationStaticsInterop
 	{
 		[PreserveSig]
-		uint GetForWindow(IntPtr window, [In] ref Guid riid, out Windows.Graphics.Display.DisplayInformation info);
+		uint GetForWindow(IntPtr window, [In] ref Guid riid, out Windows.Graphics.Display.DisplayInformation? info);
 
 		[PreserveSig]
-		uint GetForMonitor(IntPtr monitor, [In] ref Guid riid, out Windows.Graphics.Display.DisplayInformation info);
+		uint GetForMonitor(IntPtr monitor, [In] ref Guid riid, out Windows.Graphics.Display.DisplayInformation? info);
 	}
 
 	private const uint S_OK = 0;
@@ -51,7 +51,7 @@ internal static class DisplayInformationProvider
 	private static readonly Guid IID_IActivationFactory = new Guid("00000035-0000-0000-C000-000000000046");
 	private static bool _isActivationFactoryAvailable = true;
 
-	private static T GetActivationFactory<T>(string activatableClassId) where T : class
+	private static T? GetActivationFactory<T>(string activatableClassId) where T : class
 	{
 		if (!_isActivationFactoryAvailable)
 			return null;
@@ -83,7 +83,7 @@ internal static class DisplayInformationProvider
 	[DllImport("CoreMessaging.dll")]
 	private static extern int CreateDispatcherQueueController(
 		DispatcherQueueOptions options,
-		ref Windows.System.DispatcherQueueController dispatcherQueueController);
+		ref Windows.System.DispatcherQueueController? dispatcherQueueController);
 
 	[StructLayout(LayoutKind.Sequential)]
 	private struct DispatcherQueueOptions
@@ -117,16 +117,16 @@ internal static class DisplayInformationProvider
 		public bool IsHighDynamicRangeSupported { get; private set; }
 
 		[DataMember(Order = 1)]
-		public string AdvancedColorKind { get; private set; }
+		public string AdvancedColorKind { get; private set; } = string.Empty;
 
 		[DataMember(Order = 2)]
-		public string SdrWhiteLevel { get; private set; }
+		public string SdrWhiteLevel { get; private set; } = string.Empty;
 
 		[DataMember(Order = 3)]
-		public string MinLuminance { get; private set; }
+		public string MinLuminance { get; private set; } = string.Empty;
 
 		[DataMember(Order = 4)]
-		public string MaxLuminance { get; private set; }
+		public string MaxLuminance { get; private set; } = string.Empty;
 
 		public DisplayItem(IntPtr monitorHandle)
 		{
@@ -153,7 +153,7 @@ internal static class DisplayInformationProvider
 	private class Holder
 	{
 		public readonly string DeviceInstanceId;
-		public Windows.Graphics.Display.DisplayInformation DisplayInfo { get; private set; }
+		public Windows.Graphics.Display.DisplayInformation? DisplayInfo { get; private set; }
 		public int Count { get; set; } = 1;
 		public bool IsActive { get; private set; } = true; // default
 
@@ -232,7 +232,7 @@ internal static class DisplayInformationProvider
 		}
 	}
 
-	public static event EventHandler<(string deviceInstanceId, float sdrWhiteLevel)> AdvancedColorInfoChanged;
+	public static event EventHandler<(string deviceInstanceId, float sdrWhiteLevel)>? AdvancedColorInfoChanged;
 
 	private static readonly Dictionary<string, Holder> _holders = [];
 	private static readonly object _registerLock = new();
@@ -244,7 +244,7 @@ internal static class DisplayInformationProvider
 
 		lock (_registerLock)
 		{
-			_holders.TryGetValue(deviceInstanceId, out Holder holder);
+			_holders.TryGetValue(deviceInstanceId, out Holder? holder);
 			if (holder is not { IsActive: true })
 			{
 				_dispatcherQueueController.DispatcherQueue.TryEnqueue(() =>
@@ -275,7 +275,7 @@ internal static class DisplayInformationProvider
 	{
 		lock (_registerLock)
 		{
-			if (!_holders.TryGetValue(deviceInstanceId, out Holder holder))
+			if (!_holders.TryGetValue(deviceInstanceId, out Holder? holder))
 				return;
 
 			if (--holder.Count > 0)
@@ -296,10 +296,14 @@ internal static class DisplayInformationProvider
 
 	public static (AccessResult result, float sdrWhiteLevel) GetSdrWhiteLevel(string deviceInstanceId)
 	{
-		if (!_holders.TryGetValue(deviceInstanceId, out Holder holder))
+		if (!_holders.TryGetValue(deviceInstanceId, out Holder? holder))
 			return (new AccessResult(AccessStatus.Failed, "The monitor has not been registered yet."), -1);
 
-		var aci = holder.DisplayInfo.GetAdvancedColorInfo();
+		var displayInfo = holder.DisplayInfo;
+		if (displayInfo is null)
+			return (new AccessResult(AccessStatus.Failed, "The monitor is not active."), -1);
+
+		var aci = displayInfo.GetAdvancedColorInfo();
 		if (aci.CurrentAdvancedColorKind is not Windows.Graphics.Display.AdvancedColorKind.HighDynamicRange)
 			return (AccessResult.NotSupported, -1);
 
@@ -337,15 +341,19 @@ internal static class DisplayInformationProvider
 	/// <param name="windowHandle">Window handle</param>
 	/// <returns>DisplayInformation if successfully gets. Null otherwise.</returns>
 	/// <remarks>This method must be called when Windows.System.DispatcherQueue is running.</remarks>
-	private static Windows.Graphics.Display.DisplayInformation GetForWindow(IntPtr windowHandle)
+	private static Windows.Graphics.Display.DisplayInformation? GetForWindow(IntPtr windowHandle)
 	{
 		if (_dispatcherQueueController is null)
 			return null;
 
 		var factory = GetActivationFactory<IDisplayInformationStaticsInterop>("Windows.Graphics.Display.DisplayInformation");
 		if (factory is null) return null;
-		var iid = typeof(Windows.Graphics.Display.DisplayInformation).GetInterface("IDisplayInformation").GUID;
-		var result = factory.GetForWindow(windowHandle, ref iid, out Windows.Graphics.Display.DisplayInformation displayInfo);
+		var displayInformationInterface = typeof(Windows.Graphics.Display.DisplayInformation).GetInterface("IDisplayInformation");
+		if (displayInformationInterface is null)
+			return null;
+
+		var iid = displayInformationInterface.GUID;
+		var result = factory.GetForWindow(windowHandle, ref iid, out Windows.Graphics.Display.DisplayInformation? displayInfo);
 		return (result is S_OK)
 			? displayInfo
 			: null;
@@ -356,18 +364,22 @@ internal static class DisplayInformationProvider
 	/// </summary>
 	/// <param name="monitorHandle">Monitor handle</param>
 	/// <returns>DisplayInformation if successfully gets. Null otherwise.</returns>
-	private static Windows.Graphics.Display.DisplayInformation GetForMonitor(IntPtr monitorHandle)
+	private static Windows.Graphics.Display.DisplayInformation? GetForMonitor(IntPtr monitorHandle)
 	{
 		var factory = GetActivationFactory<IDisplayInformationStaticsInterop>("Windows.Graphics.Display.DisplayInformation");
 		if (factory is null) return null;
-		var iid = typeof(Windows.Graphics.Display.DisplayInformation).GetInterface("IDisplayInformation").GUID;
-		var result = factory.GetForMonitor(monitorHandle, ref iid, out Windows.Graphics.Display.DisplayInformation displayInfo);
+		var displayInformationInterface = typeof(Windows.Graphics.Display.DisplayInformation).GetInterface("IDisplayInformation");
+		if (displayInformationInterface is null)
+			return null;
+
+		var iid = displayInformationInterface.GUID;
+		var result = factory.GetForMonitor(monitorHandle, ref iid, out Windows.Graphics.Display.DisplayInformation? displayInfo);
 		return (result is S_OK)
 			? displayInfo
 			: null;
 	}
 
-	private static Windows.System.DispatcherQueueController _dispatcherQueueController = null;
+	private static Windows.System.DispatcherQueueController? _dispatcherQueueController = null;
 
 	/// <summary>
 	/// Ensures that <see cref="Windows.System.DispatcherQueue"/> is running.

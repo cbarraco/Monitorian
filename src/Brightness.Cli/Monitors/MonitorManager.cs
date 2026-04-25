@@ -31,7 +31,7 @@ public class MonitorManager
 
 		public DisplayItem(
 			DisplayConfig.DisplayItem deviceConfigItem,
-			DisplayMonitorProvider.DisplayItem displayMonitorItem)
+			DisplayMonitorProvider.DisplayItem? displayMonitorItem)
 		{
 			this._deviceConfigItem = deviceConfigItem ?? throw new ArgumentNullException(nameof(deviceConfigItem));
 
@@ -101,13 +101,13 @@ public class MonitorManager
 
 	#endregion
 
-	private static HashSet<string> _foundIds;
+	private static HashSet<string>? _foundIds;
 	private static bool _isDisplayMonitorAvailable = true; // Default
 
 	private static async Task<DisplayItem[]> GetDisplayItemsAsync()
 	{
 		var displayConfigItems = DisplayConfig.EnumerateDisplayConfigs().ToArray();
-		DisplayMonitorProvider.DisplayItem[] displayMonitorItems = null;
+		DisplayMonitorProvider.DisplayItem[]? displayMonitorItems = null;
 
 		if (OsVersion.Is10Build17134OrGreater && _isDisplayMonitorAvailable)
 		{
@@ -237,16 +237,10 @@ public class MonitorManager
 
 					var basicItem = basicItems[index];
 
-					MonitorCapability capability = null;
-					if (physicalItem.Capability.IsBrightnessSupported)
-					{
-						capability = physicalItem.Capability;
-					}
-					else if (_preclearedIds.Value.Contains(basicItem.DeviceInstanceId))
-					{
-						capability = MonitorCapability.PreclearedCapability;
-					}
-					else
+					MonitorCapability? capability = physicalItem.Capability.IsBrightnessSupported
+						? physicalItem.Capability
+						: (_preclearedIds.Value.Contains(basicItem.DeviceInstanceId) ? MonitorCapability.PreclearedCapability : null);
+					if (capability is null)
 					{
 						physicalItem.Handle.Dispose();
 						continue;
@@ -360,16 +354,16 @@ public class MonitorManager
 	private class PhysicalItemPlus : MonitorConfiguration.PhysicalItem
 	{
 		[DataMember(Order = 3)]
-		public string GetBrightness { get; private set; }
+		public string GetBrightness { get; private set; } = string.Empty;
 
 		[DataMember(Order = 4)]
-		public string SetBrightness { get; private set; }
+		public string SetBrightness { get; private set; } = string.Empty;
 
 		[DataMember(Order = 5)]
-		public string GetContrast { get; private set; }
+		public string GetContrast { get; private set; } = string.Empty;
 
 		[DataMember(Order = 6)]
-		public string SetContrast { get; private set; }
+		public string SetContrast { get; private set; } = string.Empty;
 
 		public PhysicalItemPlus(
 			MonitorConfiguration.PhysicalItem item) : base(
@@ -443,34 +437,34 @@ public class MonitorManager
 	private class MonitorData
 	{
 		[DataMember(Order = 0)]
-		public string System { get; private set; }
+		public string System { get; private set; } = string.Empty;
 
 		// When Name property of DataMemberAttribute contains a space or specific character 
 		// (e.g. !, ?), DataContractJsonSerializer.WriteObject method will internally throw 
 		// a System.Xml.XmlException while it will work fine.
 		[DataMember(Order = 1, Name = "Device Context - DeviceItems")]
-		public DeviceContext.DeviceItem[] DeviceItems { get; private set; }
+		public DeviceContext.DeviceItem[] DeviceItems { get; private set; } = [];
 
 		[DataMember(Order = 2, Name = "Display Monitor - DisplayItems")]
-		public DisplayMonitorProvider.DisplayItem[] DisplayMonitorItems { get; private set; }
+		public DisplayMonitorProvider.DisplayItem[] DisplayMonitorItems { get; private set; } = [];
 
 		[DataMember(Order = 3, Name = "Display Config - DisplayItems")]
-		public DisplayConfig.DisplayItem[] DisplayConfigItems { get; private set; }
+		public DisplayConfig.DisplayItem[] DisplayConfigItems { get; private set; } = [];
 
 		[DataMember(Order = 4, Name = "Display Information - DisplayItems")]
-		public DisplayItemPlus[] DisplayInformationItems { get; private set; }
+		public DisplayItemPlus[] DisplayInformationItems { get; private set; } = [];
 
 		[DataMember(Order = 5, Name = "Device Installation - InstalledItems")]
-		public DeviceInformation.InstalledItem[] InstalledItems { get; private set; }
+		public DeviceInformation.InstalledItem[] InstalledItems { get; private set; } = [];
 
 		[DataMember(Order = 6, Name = "Monitor Configuration - PhysicalItems")]
-		public Dictionary<DeviceContext.HandleItem, PhysicalItemPlus[]> PhysicalItems { get; private set; }
+		public Dictionary<DeviceContext.HandleItem, PhysicalItemPlus[]> PhysicalItems { get; private set; } = [];
 
 		[DataMember(Order = 7, Name = "MSMonitorClass - DesktopItems")]
-		public MSMonitor.DesktopItem[] DesktopItems { get; private set; }
+		public MSMonitor.DesktopItem[] DesktopItems { get; private set; } = [];
 
 		[DataMember(Order = 8)]
-		public string[] ElapsedTime { get; private set; }
+		public string[] ElapsedTime { get; private set; } = [];
 
 		public MonitorData()
 		{ }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
 using System.Text.RegularExpressions;
@@ -78,7 +79,7 @@ internal class DeviceContext
 	[DllImport("User32.dll", EntryPoint = "EnumDisplayDevicesA")]
 	[return: MarshalAs(UnmanagedType.Bool)]
 	private static extern bool EnumDisplayDevices(
-		string lpDevice,
+		string? lpDevice,
 		uint iDevNum,
 		ref DISPLAY_DEVICE lpDisplayDevice,
 		uint dwFlags);
@@ -216,7 +217,7 @@ internal class DeviceContext
 
 		public Rect MonitorRect { get; } = monitorRect;
 		[DataMember(Order = 1, Name = nameof(MonitorRect))]
-		private string _monitorRectString;
+		private string _monitorRectString = string.Empty;
 
 		[OnSerializing]
 		private void OnSerializing(StreamingContext context)
@@ -325,7 +326,7 @@ internal class DeviceContext
 
 	public static bool Rotate(string deviceInstanceId)
 	{
-		if (!TryGetDisplay(deviceInstanceId, out string displayName, out DEVMODE dm))
+		if (!TryGetDisplay(deviceInstanceId, out var displayName, out DEVMODE dm))
 			return false;
 
 		// Change orientation 90 degrees clockwise.
@@ -340,7 +341,7 @@ internal class DeviceContext
 		return RotateDisplay(displayName, ref dm, orientation);
 	}
 
-	private static bool TryGetDisplay(string deviceInstanceId, out string displayName, out DEVMODE dm)
+	private static bool TryGetDisplay(string deviceInstanceId, [NotNullWhen(true)] out string? displayName, out DEVMODE dm)
 	{
 		foreach (var (display, _, monitor, _) in EnumerateDevices())
 		{

@@ -1,12 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 namespace Brightness.Cli.Support;
 
 public static class EnumerableExtension
 {
-	public static bool TryGetKey<TKey, TValue>(this IEnumerable<KeyValuePair<TKey, TValue>> pairs, TValue value, out TKey key)
+	public static bool TryGetKey<TKey, TValue>(this IEnumerable<KeyValuePair<TKey, TValue>> pairs, TValue value, [MaybeNullWhen(false)] out TKey key)
 	{
 		if (pairs is null)
 			throw new ArgumentNullException(nameof(pairs));
@@ -23,9 +24,10 @@ public static class EnumerableExtension
 		return false;
 	}
 
+	[return: MaybeNull]
 	public static TKey GetKeyOrDefault<TKey, TValue>(this IEnumerable<KeyValuePair<TKey, TValue>> pairs, TValue value)
 	{
-		TryGetKey(pairs, value, out TKey key);
+		TryGetKey(pairs, value, out TKey? key);
 		return key;
 	}
 

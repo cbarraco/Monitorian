@@ -265,7 +265,7 @@ internal class MonitorConfiguration
 				capabilitiesStringLength))
 			{
 				var capabilitiesString = buffer.ToString();
-				Dictionary<byte, byte[]> vcpCodes = ExtractVcpCodes(capabilitiesString);
+				Dictionary<byte, byte[]?> vcpCodes = ExtractVcpCodes(capabilitiesString);
 
 				return new MonitorCapability(
 					isHighLevelBrightnessSupported: isHighLevelSupported,
@@ -282,7 +282,7 @@ internal class MonitorConfiguration
 			isLowLevelBrightnessSupported: false,
 			isContrastSupported: false);
 
-		static string MakeCapabilitiesReport(IReadOnlyDictionary<byte, byte[]> vcpCodeValues)
+		static string MakeCapabilitiesReport(IReadOnlyDictionary<byte, byte[]?> vcpCodeValues)
 		{
 			return $"Luminance: {vcpCodeValues.ContainsKey((byte)VcpCode.Luminance)}, " +
 				   $"Contrast: {vcpCodeValues.ContainsKey((byte)VcpCode.Contrast)}, " +
@@ -292,7 +292,7 @@ internal class MonitorConfiguration
 				   $"Power Mode: {vcpCodeValues.ContainsKey((byte)VcpCode.PowerMode)}";
 		}
 
-		static byte[] GetCapabilitiesData(SafePhysicalMonitorHandle physicalMonitorHandle, uint capabilitiesStringLength)
+		static byte[]? GetCapabilitiesData(SafePhysicalMonitorHandle physicalMonitorHandle, uint capabilitiesStringLength)
 		{
 			var dataPointer = IntPtr.Zero;
 			try
@@ -369,9 +369,9 @@ internal class MonitorConfiguration
 		static bool IsHexNumber(char c) => c is (>= '0' and <= '9') or (>= 'A' and <= 'F') or (>= 'a' and <= 'f');
 	}
 
-	private static Dictionary<byte, byte[]> ExtractVcpCodes(string source)
+	private static Dictionary<byte, byte[]?> ExtractVcpCodes(string source)
 	{
-		var dic = new Dictionary<byte, byte[]>();
+		var dic = new Dictionary<byte, byte[]?>();
 
 		if (string.IsNullOrEmpty(source))
 			return dic;
@@ -453,9 +453,9 @@ internal class MonitorConfiguration
 		static bool IsHexNumber(char c) => c is (>= '0' and <= '9') or (>= 'A' and <= 'F') or (>= 'a' and <= 'f');
 	}
 
-	private static Dictionary<byte, byte[]> FilterVcpCodes(Dictionary<byte, byte[]> dic)
+	private static Dictionary<byte, byte[]?> FilterVcpCodes(Dictionary<byte, byte[]?> dic)
 	{
-		if (dic.TryGetValue((byte)VcpCode.Temperature, out byte[] values)
+		if (dic.TryGetValue((byte)VcpCode.Temperature, out byte[]? values)
 			&& (values is not null))
 		{
 			// The following color temperatures are defined.
@@ -705,25 +705,25 @@ internal class MonitorCapability
 	[DataMember(Order = 3)]
 	public bool IsPrecleared { get; }
 
-	public IReadOnlyDictionary<byte, IReadOnlyList<byte>> CapabilitiesCodes { get; }
+	public IReadOnlyDictionary<byte, IReadOnlyList<byte>?>? CapabilitiesCodes { get; }
 
 	[DataMember(Order = 4)]
-	public string CapabilitiesString { get; }
+	public string? CapabilitiesString { get; }
 
 	[DataMember(Order = 5)]
-	public string CapabilitiesReport { get; }
+	public string? CapabilitiesReport { get; }
 
 	[DataMember(Order = 6)]
-	public string CapabilitiesData { get; }
+	public string? CapabilitiesData { get; }
 
 	public MonitorCapability(
 		bool isHighLevelBrightnessSupported,
 		bool isLowLevelBrightnessSupported,
 		bool isContrastSupported,
-		IReadOnlyDictionary<byte, byte[]> capabilitiesCodes = null,
-		string capabilitiesString = null,
-		string capabilitiesReport = null,
-		byte[] capabilitiesData = null) : this(
+		IReadOnlyDictionary<byte, byte[]?>? capabilitiesCodes = null,
+		string? capabilitiesString = null,
+		string? capabilitiesReport = null,
+		byte[]? capabilitiesData = null) : this(
 			isHighLevelBrightnessSupported: isHighLevelBrightnessSupported,
 			isLowLevelBrightnessSupported: isLowLevelBrightnessSupported,
 			isContrastSupported: isContrastSupported,
@@ -739,16 +739,21 @@ internal class MonitorCapability
 		bool isLowLevelBrightnessSupported,
 		bool isContrastSupported,
 		bool isPrecleared,
-		IReadOnlyDictionary<byte, byte[]> capabilitiesCodes,
-		string capabilitiesString,
-		string capabilitiesReport,
-		byte[] capabilitiesData)
+		IReadOnlyDictionary<byte, byte[]?>? capabilitiesCodes,
+		string? capabilitiesString,
+		string? capabilitiesReport,
+		byte[]? capabilitiesData)
 	{
 		this.IsHighLevelBrightnessSupported = isHighLevelBrightnessSupported;
 		this.IsLowLevelBrightnessSupported = isLowLevelBrightnessSupported;
 		this.IsContrastSupported = isContrastSupported;
 		this.IsPrecleared = isPrecleared;
-		this.CapabilitiesCodes = (capabilitiesCodes is not null) ? new ReadOnlyDictionary<byte, IReadOnlyList<byte>>(capabilitiesCodes.ToDictionary(x => x.Key, x => (x.Value is not null) ? (IReadOnlyList<byte>)Array.AsReadOnly(x.Value) : null)) : null;
+		this.CapabilitiesCodes = (capabilitiesCodes is not null)
+			? new ReadOnlyDictionary<byte, IReadOnlyList<byte>?>(
+				capabilitiesCodes.ToDictionary(
+					x => x.Key,
+					x => (x.Value is not null) ? (IReadOnlyList<byte>?)Array.AsReadOnly(x.Value) : null))
+			: null;
 		this.CapabilitiesString = capabilitiesString;
 		this.CapabilitiesReport = capabilitiesReport;
 		this.CapabilitiesData = (capabilitiesData is not null) ? Convert.ToBase64String(capabilitiesData) : null;

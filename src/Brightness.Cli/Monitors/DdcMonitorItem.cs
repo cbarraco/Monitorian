@@ -102,7 +102,7 @@ internal class DdcMonitorItem(
 		return result;
 	}
 
-	public override (AccessResult result, ValueData data) GetValue(byte code)
+	public override (AccessResult result, ValueData? data) GetValue(byte code)
 	{
 		if ((_capability.CapabilitiesCodes is null)
 			|| !_capability.CapabilitiesCodes.TryGetValue(code, out var values))
@@ -117,7 +117,7 @@ internal class DdcMonitorItem(
 		return (result, null);
 	}
 
-	public override (AccessResult result, ValueData data) SetValue(byte code, int value)
+	public override (AccessResult result, ValueData? data) SetValue(byte code, int value)
 	{
 		if ((_capability.CapabilitiesCodes is null)
 			|| !_capability.CapabilitiesCodes.TryGetValue(code, out var values)

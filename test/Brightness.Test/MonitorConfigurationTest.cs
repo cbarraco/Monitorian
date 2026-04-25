@@ -405,13 +405,15 @@ public class MonitorConfigurationTest
 		var dic = type.GetMethod("ExtractVcpCodes", flags)?.Invoke(null, [source]) as Dictionary<byte, byte[]>;
 		var enumerator = type.GetMethod("EnumerateVcpCodes", flags)?.Invoke(null, [source]) as IEnumerable<byte>;
 
-		bool success = (dic is { Count: > 0 }) && dic.Keys.SequenceEqual(enumerator?.ToArray());
+		Assert.IsNotNull(dic);
+
+		bool success = (enumerator is not null) && (dic.Count > 0) && dic.Keys.SequenceEqual(enumerator);
 		return (success, dic);
 	}
 
 	private static bool AreIncluded(Dictionary<byte, byte[]> source, VcpCode key, params byte[] elements)
 	{
-		if (!source.TryGetValue((byte)key, out byte[] values))
+		if (!source.TryGetValue((byte)key, out byte[]? values) || values is null)
 			return false;
 
 		return (elements.Length == 0)

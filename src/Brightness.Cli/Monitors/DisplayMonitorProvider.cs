@@ -115,11 +115,10 @@ internal class DisplayMonitorProvider
 				foreach (var device in devices)
 				{
 					// Null check is inserted because NullReferenceException is observed in this method.
-					if ((device is null) || !device.Properties.TryGetValue(deviceInstanceIdKey, out object value))
-						continue;
-
-					var deviceInstanceId = value as string;
-					if (string.IsNullOrWhiteSpace(deviceInstanceId))
+					if ((device is null) ||
+						!device.Properties.TryGetValue(deviceInstanceIdKey, out var value) ||
+						(value is not string deviceInstanceId) ||
+						string.IsNullOrWhiteSpace(deviceInstanceId))
 						continue;
 
 					var displayMonitor = await Windows.Devices.Display.DisplayMonitor.FromInterfaceIdAsync(device.Id);

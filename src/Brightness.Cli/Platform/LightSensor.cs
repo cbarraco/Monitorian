@@ -43,7 +43,7 @@ public static class LightSensor
 			return true;
 		}
 
-		private static Windows.Devices.Sensors.LightSensor _sensor;
+		private static Windows.Devices.Sensors.LightSensor? _sensor;
 		private static readonly object _lock = new();
 
 		/// <summary>
@@ -114,7 +114,7 @@ public static class LightSensor
 				}
 			}
 		}
-		private static event EventHandler<float> _ambientLightChanged;
+		private static event EventHandler<float>? _ambientLightChanged;
 
 		private static void OnReadingChanged(Windows.Devices.Sensors.LightSensor sender, Windows.Devices.Sensors.LightSensorReadingChangedEventArgs args)
 		{
@@ -189,8 +189,8 @@ public static class LightSensor
 
 		private static bool SensorExists(Guid sensorTypeGuid)
 		{
-			ISensorManager sensorManager = null;
-			ISensorCollection sensorCollection = null;
+			ISensorManager? sensorManager = null;
+			ISensorCollection? sensorCollection = null;
 			try
 			{
 				sensorManager = (ISensorManager)new SensorManager();

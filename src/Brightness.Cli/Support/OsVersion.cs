@@ -59,14 +59,16 @@ internal static class OsVersion
 	private static readonly Dictionary<string, bool> _cache = [];
 	private static readonly object _lock = new();
 
-	private static bool IsEqualToOrGreaterThan(in int major, in int minor = 0, in int build = 0, [CallerMemberName] string propertyName = null)
+	private static bool IsEqualToOrGreaterThan(in int major, in int minor = 0, in int build = 0, [CallerMemberName] string? propertyName = null)
 	{
+		var cacheKey = propertyName ?? string.Empty;
+
 		lock (_lock)
 		{
-			if (!_cache.TryGetValue(propertyName, out bool value))
+			if (!_cache.TryGetValue(cacheKey, out bool value))
 			{
 				value = (new Version(major, minor, build) <= Environment.OSVersion.Version);
-				_cache[propertyName] = value; // Indexer is safer than Dictionary.Add method.
+				_cache[cacheKey] = value; // Indexer is safer than Dictionary.Add method.
 			}
 			return value;
 		}
