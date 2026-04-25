@@ -1,8 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-using Monitorian.Core.Models.Monitor;
+using MonitorBrightnessCli.Monitors;
 
 namespace Monitorian.Test;
 
@@ -399,9 +400,10 @@ public class MonitorConfigurationTest
 
 	private static (bool success, Dictionary<byte, byte[]> vcpCodes) TestExtractVcpCodes(string source)
 	{
-		var @class = new PrivateType(typeof(MonitorConfiguration));
-		var dic = @class.InvokeStatic("ExtractVcpCodes", source) as Dictionary<byte, byte[]>;
-		var enumerator = @class.InvokeStatic("EnumerateVcpCodes", source) as IEnumerable<byte>;
+		var type = typeof(MonitorConfiguration);
+		const BindingFlags flags = BindingFlags.NonPublic | BindingFlags.Static;
+		var dic = type.GetMethod("ExtractVcpCodes", flags)?.Invoke(null, [source]) as Dictionary<byte, byte[]>;
+		var enumerator = type.GetMethod("EnumerateVcpCodes", flags)?.Invoke(null, [source]) as IEnumerable<byte>;
 
 		bool success = (dic is { Count: > 0 }) && dic.Keys.SequenceEqual(enumerator?.ToArray());
 		return (success, dic);

@@ -1,6 +1,6 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-using static Monitorian.Core.Models.Monitor.DeviceConversion;
+using static MonitorBrightnessCli.Monitors.DeviceConversion;
 
 namespace Monitorian.Test;
 

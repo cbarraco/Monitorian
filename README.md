@@ -61,7 +61,7 @@ Additional languages:
    ```
 
  * Other:<br>
-:floppy_disk: [Installer](https://github.com/emoacht/Monitorian/releases/download/4.14.0-Installer/MonitorianInstaller3140.zip)
+:floppy_disk: [Installer](https://github.com/emoacht/Monitorian/releases/download/4.15.0-Installer/MonitorianInstaller3150.zip)
 
 ## Install/Uninstall
 
@@ -232,6 +232,11 @@ An alternative language can be shown by adding a Resources (.resx) file into `/S
  - VESA [Monitor Control Command Set (MCCS)](https://www.google.co.jp/search?q=VESA+Monitor+Control+Command+Set+Standard+MCCS) standard
 
 ## History
+
+Ver 4.15 2026-4-11
+
+ - Add function to show monitor identity
+ - Add functionality to read EDID
 
 Ver 4.14 2026-3-22
 
