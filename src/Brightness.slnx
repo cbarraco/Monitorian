@@ -1,8 +1,0 @@
-<Solution>
-  <Configurations>
-    <Platform Name="Any CPU" />
-    <Platform Name="x86" />
-  </Configurations>
-  <Project Path="../test/Brightness.Test/Brightness.Test.csproj" />
-  <Project Path="Brightness.Cli/Brightness.Cli.csproj" />
-</Solution>
